@@ -2,6 +2,7 @@ package store
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/Phonevilai/assessment/pkg/expense"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
@@ -12,7 +13,7 @@ import (
 type DataStore interface {
 	CreateExpense(e expense.Expense) error
 	FindExpenseById(findId int) (*expense.Expense, error)
-	UpdateExpense(e expense.Expense) (*expense.Expense, error)
+	UpdateExpenseById(e expense.Expense) (*expense.Expense, error)
 	FindAllExpenses() ([]*expense.Expense, error)
 }
 
@@ -38,6 +39,8 @@ func (s *Store) FindExpenseById(findId int) (*expense.Expense, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
+
 	var e expense.Expense
 	var id int
 	for rows.Next() {
@@ -50,17 +53,22 @@ func (s *Store) FindExpenseById(findId int) (*expense.Expense, error) {
 	return &e, nil
 }
 
-func (s *Store) UpdateExpenseByID(e expense.Expense) (*expense.Expense, error) {
-	row := s.db.QueryRow("UPDATE expenses SET title = $1, amount = $2, note = $3, tags = $4 WHERE id = $5 RETURNING id, title, amount, note, tags",
-		e.Title, e.Amount, e.Note, pq.Array(&e.Tags), e.ID)
-	var id int
-	var ne expense.Expense
-	if err := row.Scan(&id, &ne.Title, &ne.Amount, &ne.Note, (*pq.StringArray)(&ne.Tags)); err != nil {
+func (s *Store) UpdateExpenseById(e expense.Expense) (*expense.Expense, error) {
+	stmt, err := s.db.Prepare("UPDATE expenses SET title=$2, amount=$3, note=$4, tags=$5 WHERE expenses.id = $1")
+	if err != nil {
 		return nil, err
 	}
-	ne.ID = strconv.Itoa(id)
+	defer stmt.Close()
 
-	return &ne, nil
+	inId, err := strconv.Atoi(e.ID)
+	if err != nil {
+		return nil, err
+	}
+	if _, err = stmt.Exec(inId, e.Title, e.Amount, e.Note, pq.Array(&e.Tags)); err != nil {
+		return nil, err
+	}
+	fmt.Println("update success")
+	return &e, nil
 }
 
 func (s *Store) FindAllExpenses() ([]*expense.Expense, error) {
