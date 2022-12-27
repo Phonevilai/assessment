@@ -9,6 +9,13 @@ import (
 	"strconv"
 )
 
+type DataStore interface {
+	CreateExpense(e expense.Expense) error
+	FindExpenseById(findId int) (*expense.Expense, error)
+	UpdateExpense(e expense.Expense) (*expense.Expense, error)
+	FindAllExpenses() ([]*expense.Expense, error)
+}
+
 type Store struct {
 	db *sql.DB
 }
@@ -26,11 +33,37 @@ func (s *Store) CreateExpense(e expense.Expense) error {
 	return nil
 }
 
-func (s *Store) FindExpenseById(id string) (expense.Expense, error) {
-
+func (s *Store) FindExpenseById(findId int) (*expense.Expense, error) {
+	rows, err := s.db.Query("SELECT * FROM expenses WHERE id = $1", findId)
+	if err != nil {
+		return nil, err
+	}
+	var e expense.Expense
+	var id int
+	for rows.Next() {
+		err = rows.Scan(&id, &e.Title, &e.Amount, &e.Note, (*pq.StringArray)(&e.Tags))
+		if err != nil {
+			return nil, err
+		}
+		e.ID = strconv.Itoa(id)
+	}
+	return &e, nil
 }
 
-func (s *Store) FindAllExpenses() ([]expense.Expense, error) {
+func (s *Store) UpdateExpenseByID(e expense.Expense) (*expense.Expense, error) {
+	row := s.db.QueryRow("UPDATE expenses SET title = $1, amount = $2, note = $3, tags = $4 WHERE id = $5 RETURNING id, title, amount, note, tags",
+		e.Title, e.Amount, e.Note, pq.Array(&e.Tags), e.ID)
+	var id int
+	var ne expense.Expense
+	if err := row.Scan(&id, &ne.Title, &ne.Amount, &ne.Note, (*pq.StringArray)(&ne.Tags)); err != nil {
+		return nil, err
+	}
+	ne.ID = strconv.Itoa(id)
+
+	return &ne, nil
+}
+
+func (s *Store) FindAllExpenses() ([]*expense.Expense, error) {
 	stml, err := s.db.Prepare("SELECT * FROM expecses")
 	if err != nil {
 		return nil, err
@@ -40,11 +73,11 @@ func (s *Store) FindAllExpenses() ([]expense.Expense, error) {
 		return nil, err
 	}
 
-	var expenses []expense.Expense
+	var expenses []*expense.Expense
 	for rows.Next() {
-		var e expense.Expense
+		var e *expense.Expense
 		var id int
-		err = rows.Scan(&id, &e.Title, &e.Amount, &e.Note, &e.Tags)
+		err = rows.Scan(&id, &e.Title, &e.Amount, &e.Note, (*pq.StringArray)(&e.Tags))
 		if err != nil {
 			return nil, err
 		}
@@ -55,12 +88,11 @@ func (s *Store) FindAllExpenses() ([]expense.Expense, error) {
 	return expenses, nil
 }
 
-func NewDb(url string) *sql.DB {
+func NewDB(url string) *sql.DB {
 	db, err := sql.Open("postgres", url)
 	if err != nil {
 		log.Fatal("Connect to database error ", err)
 	}
-	defer db.Close()
 
 	createTb := `
 	CREATE TABLE IF NOT EXISTS expenses (
