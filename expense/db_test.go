@@ -26,7 +26,7 @@ func TestConnectToDB(t *testing.T) {
 		getEnv()
 		db := NewDB(os.Getenv("DATABASE_URL"))
 		s := NewStore(db)
-		e := ReqCreate{
+		e := Req{
 			Title:  "strawberry smoothie",
 			Amount: 1000,
 			Note:   "night market promotion discount 10 bath",

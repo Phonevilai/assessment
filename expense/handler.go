@@ -17,23 +17,25 @@ func CreateExpense(s Services) gin.HandlerFunc {
 			c.Status(http.StatusInternalServerError)
 			return
 		}
-		c.JSON(http.StatusCreated, Res{
-			ID:     r.ID,
-			Title:  r.Title,
-			Amount: r.Amount,
-			Note:   r.Note,
-			Tags:   r.Tags,
-		})
+		c.JSON(http.StatusCreated, r)
 	}
 }
 
-//
-//func GetExpense(s Services) gin.HandlerFunc {
-//	return func(c *gin.Context) {
-//		id := c.Param("id")
-//
-//	}
-//}
+func GetExpense(s Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		r, err := s.FindById(id)
+		if err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		if r.ID == "" {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		c.JSON(http.StatusOK, r)
+	}
+}
 
 //func updateExpense() gin.HandlerFunc {
 //	return func(c *gin.Context) {
