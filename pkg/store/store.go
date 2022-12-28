@@ -7,7 +7,6 @@ import (
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"log"
-	"strconv"
 )
 
 type DataStore interface {
@@ -34,62 +33,60 @@ func (s *Store) CreateExpense(e expense.Expense) error {
 	return nil
 }
 
-func (s *Store) FindExpenseById(findId int) (*expense.Expense, error) {
-	rows, err := s.db.Query("SELECT * FROM expenses WHERE id = $1", findId)
+func (s *Store) FindExpenseById(id string) (*expense.Expense, error) {
+	rows, err := s.db.Query("SELECT * FROM expenses WHERE id = $1", id)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	var e expense.Expense
-	var id int
+
 	for rows.Next() {
-		err = rows.Scan(&id, &e.Title, &e.Amount, &e.Note, (*pq.StringArray)(&e.Tags))
+		err = rows.Scan(&e.ID, &e.Title, &e.Amount, &e.Note, (*pq.StringArray)(&e.Tags))
 		if err != nil {
 			return nil, err
 		}
-		e.ID = strconv.Itoa(id)
 	}
+
 	return &e, nil
 }
 
 func (s *Store) UpdateExpenseById(e expense.Expense) (*expense.Expense, error) {
-	stmt, err := s.db.Prepare("UPDATE expenses SET title=$2, amount=$3, note=$4, tags=$5 WHERE expenses.id = $1")
+	update := `
+UPDATE expenses SET title=$2, amount=$3, note=$4, tags=$5 WHERE expenses.id = $1 RETURNING expenses.id, title, amount, note, tags;
+`
+	var ne expense.Expense
+	err := s.db.QueryRow(update, e.ID, e.Title, e.Amount, e.Note, pq.Array(&e.Tags)).Scan(&ne.ID, &ne.Title, &ne.Amount, &ne.Note, (*pq.StringArray)(&ne.Tags))
 	if err != nil {
 		return nil, err
 	}
-	defer stmt.Close()
 
-	inId, err := strconv.Atoi(e.ID)
-	if err != nil {
-		return nil, err
-	}
-	if _, err = stmt.Exec(inId, e.Title, e.Amount, e.Note, pq.Array(&e.Tags)); err != nil {
-		return nil, err
-	}
-	fmt.Println("update success")
-	return &e, nil
+	fmt.Println("Updated:", ne.ID, ne.Title, ne.Amount, ne.Note, ne.Tags)
+	return &ne, nil
 }
 
-func (s *Store) FindAllExpenses() ([]*expense.Expense, error) {
-	stml, err := s.db.Prepare("SELECT * FROM expecses")
+func (s *Store) FindAllExpenses() ([]expense.Expense, error) {
+	stml, err := s.db.Prepare("SELECT * FROM expenses")
 	if err != nil {
 		return nil, err
 	}
+	defer stml.Close()
+
 	rows, err := stml.Query()
 	if err != nil {
 		return nil, err
 	}
 
-	var expenses []*expense.Expense
+	defer rows.Close()
+
+	var expenses []expense.Expense
 	for rows.Next() {
-		var e *expense.Expense
-		var id int
-		err = rows.Scan(&id, &e.Title, &e.Amount, &e.Note, (*pq.StringArray)(&e.Tags))
+		var e expense.Expense
+		err = rows.Scan(&e.ID, &e.Title, &e.Amount, &e.Note, (*pq.StringArray)(&e.Tags))
 		if err != nil {
 			return nil, err
 		}
-		e.ID = strconv.Itoa(id)
 		expenses = append(expenses, e)
 	}
 

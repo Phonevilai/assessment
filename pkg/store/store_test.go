@@ -41,24 +41,33 @@ func TestConnectToDB(t *testing.T) {
 		getEnv()
 		db := NewDB(os.Getenv("DATABASE_URL"))
 		s := NewStore(db)
-		result, _ := s.FindExpenseById(1)
+		result, _ := s.FindExpenseById("1")
 		fmt.Println("result:", result)
-		assert.Equal(t, 79.00, result.Amount)
+		assert.Equal(t, 100.00, result.Amount)
 	})
 
-	t.Run("update expense by id", func(t *testing.T) {
+	t.Run("update expense by id and returning", func(t *testing.T) {
 		getEnv()
 		db := NewDB(os.Getenv("DATABASE_URL"))
 		s := NewStore(db)
 		e := expense.Expense{
-			ID:     "4",
-			Title:  "strawberry smoothie",
-			Amount: 5.00,
-			Note:   "night market promotion discount 10 bath",
-			Tags:   []string{"beverage"},
+			ID:     "1",
+			Title:  "toooky",
+			Amount: 100.00,
+			Note:   "1",
+			Tags:   []string{"123"},
 		}
 		result, err := s.UpdateExpenseById(e)
 		fmt.Println("result:", result)
+		assert.Equal(t, nil, err)
+	})
+
+	t.Run("find all expenses", func(t *testing.T) {
+		getEnv()
+		db := NewDB(os.Getenv("DATABASE_URL"))
+		s := NewStore(db)
+		r, err := s.FindAllExpenses()
+		fmt.Println("result:", len(r))
 		assert.Equal(t, nil, err)
 	})
 }
