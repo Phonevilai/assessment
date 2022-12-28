@@ -23,17 +23,11 @@ func init() {
 
 func main() {
 
-	r := gin.Default()
 	db := expense.NewDB(os.Getenv("DATABASE_URL"))
 	mydb := expense.NewStore(db)
 	service := expense.NewService(mydb)
 
-	r.GET("/healthz", healthCheck())
-	r.POST("/expenses", expense.CreateExpense(service))
-	r.GET("/expenses/:id", expense.GetExpense(service))
-	r.PUT("/expenses/:id", expense.UpdateExpense(service))
-	r.GET("/expenses", expense.GetAllExpenses(service))
-
+	r := expense.SetupRouter(service)
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
@@ -62,10 +56,4 @@ func main() {
 		fmt.Println(err)
 	}
 
-}
-
-func healthCheck() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Status(http.StatusOK)
-	}
 }

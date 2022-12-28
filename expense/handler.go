@@ -5,7 +5,19 @@ import (
 	"net/http"
 )
 
-func CreateExpense(s Services) gin.HandlerFunc {
+func SetupRouter(s *MyService) *gin.Engine {
+
+	r := gin.Default()
+	r.GET("/healthz", healthCheck())
+	r.POST("/expenses", createExpense(s))
+	r.GET("/expenses/:id", getExpense(s))
+	r.PUT("/expenses/:id", updateExpense(s))
+	r.GET("/expenses", getAllExpenses(s))
+
+	return r
+}
+
+func createExpense(s Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req Req
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -21,7 +33,7 @@ func CreateExpense(s Services) gin.HandlerFunc {
 	}
 }
 
-func GetExpense(s Services) gin.HandlerFunc {
+func getExpense(s Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		r, err := s.FindById(id)
@@ -37,7 +49,7 @@ func GetExpense(s Services) gin.HandlerFunc {
 	}
 }
 
-func UpdateExpense(s Services) gin.HandlerFunc {
+func updateExpense(s Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var req Req
@@ -54,7 +66,7 @@ func UpdateExpense(s Services) gin.HandlerFunc {
 	}
 }
 
-func GetAllExpenses(s Services) gin.HandlerFunc {
+func getAllExpenses(s Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		r, err := s.GetAll()
 		if err != nil {
@@ -62,5 +74,11 @@ func GetAllExpenses(s Services) gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, r)
+	}
+}
+
+func healthCheck() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Status(http.StatusOK)
 	}
 }
