@@ -71,13 +71,21 @@ func (s *Store) FindAllExpenses() ([]expense.Expense, error) {
 	if err != nil {
 		return nil, err
 	}
+<<<<<<< HEAD
+=======
+	defer stml.Close()
+>>>>>>> develop
 
 	rows, err := stml.Query()
 	if err != nil {
 		return nil, err
 	}
 
+<<<<<<< HEAD
 	defer stml.Close()
+=======
+	defer rows.Close()
+>>>>>>> develop
 
 	var expenses []expense.Expense
 	for rows.Next() {
