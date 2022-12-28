@@ -17,12 +17,6 @@ type Router struct {
 	*gin.Engine
 }
 
-func NewHandler() *Router {
-	r := gin.Default()
-	r.GET("/healthz", healthCheck())
-	return &Router{r}
-}
-
 func healthCheck() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Status(http.StatusOK)

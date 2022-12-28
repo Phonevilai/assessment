@@ -21,7 +21,7 @@ func init() {
 
 func main() {
 
-	handler := expense.NewHandler()
+	handler := expense.NewMainHandler()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
