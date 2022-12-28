@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/Phonevilai/assessment/pkg/config"
-	"github.com/Phonevilai/assessment/pkg/expense"
+	"github.com/Phonevilai/assessment/expense"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"os"
@@ -15,20 +15,29 @@ import (
 )
 
 func init() {
-	config.GetEnv("dev.env")
+	if err := godotenv.Load("dev.env"); err != nil {
+		fmt.Printf("please consider environment variables: %s\n", err)
+	}
 	gin.SetMode(os.Getenv("GIN_MODE"))
 }
 
 func main() {
 
-	handler := expense.NewMainHandler()
+	r := gin.Default()
+	db := expense.NewDB(os.Getenv("DATABASE_URL"))
+	mydb := expense.NewStore(db)
+	service := expense.NewService(mydb)
+
+	r.GET("/healthz", healthCheck())
+	r.POST("/expenses", expense.CreateExpense(service))
+	//r.GET("/expenses/:id", expense.GetExpense(service))
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
 	s := &http.Server{
 		Addr:           ":" + os.Getenv("PORT"),
-		Handler:        handler,
+		Handler:        r,
 		ReadTimeout:    15 * time.Second,
 		WriteTimeout:   15 * time.Second,
 		MaxHeaderBytes: 1 << 20,
@@ -51,4 +60,10 @@ func main() {
 		fmt.Println(err)
 	}
 
+}
+
+func healthCheck() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	}
 }
