@@ -37,12 +37,23 @@ func GetExpense(s Services) gin.HandlerFunc {
 	}
 }
 
-//func updateExpense() gin.HandlerFunc {
-//	return func(c *gin.Context) {
-//
-//	}
-//}
-//
+func UpdateExpense(s Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		var req Req
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.Status(http.StatusBadRequest)
+			return
+		}
+		r, err := s.Update(id, req)
+		if err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		c.JSON(http.StatusOK, r)
+	}
+}
+
 //func getAllExpenses() gin.HandlerFunc {
 //	return func(c *gin.Context) {
 //
