@@ -54,8 +54,13 @@ func UpdateExpense(s Services) gin.HandlerFunc {
 	}
 }
 
-//func getAllExpenses() gin.HandlerFunc {
-//	return func(c *gin.Context) {
-//
-//	}
-//}
+func GetAllExpenses(s Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		r, err := s.GetAll()
+		if err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		c.JSON(http.StatusOK, r)
+	}
+}

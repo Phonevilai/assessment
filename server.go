@@ -32,6 +32,7 @@ func main() {
 	r.POST("/expenses", expense.CreateExpense(service))
 	r.GET("/expenses/:id", expense.GetExpense(service))
 	r.PUT("/expenses/:id", expense.UpdateExpense(service))
+	r.GET("/expenses", expense.GetAllExpenses(service))
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()

@@ -68,8 +68,8 @@ UPDATE expenses SET title=$2, amount=$3, note=$4, tags=$5 WHERE expenses.id = $1
 	return &ne, nil
 }
 
-func (s *MyStore) FindAllExpenses() ([]Expense, error) {
-	stml, err := s.Prepare("SELECT * FROM expenses")
+func (s *MyStore) FindAllExpenses() ([]*Expense, error) {
+	stml, err := s.Prepare("SELECT * FROM expenses ORDER BY expenses.id ASC")
 	if err != nil {
 		return nil, err
 	}
@@ -81,14 +81,14 @@ func (s *MyStore) FindAllExpenses() ([]Expense, error) {
 	}
 	defer rows.Close()
 
-	var expenses []Expense
+	var expenses []*Expense
 	for rows.Next() {
 		var e Expense
 		err = rows.Scan(&e.ID, &e.Title, &e.Amount, &e.Note, (*pq.StringArray)(&e.Tags))
 		if err != nil {
 			return nil, err
 		}
-		expenses = append(expenses, e)
+		expenses = append(expenses, &e)
 	}
 
 	return expenses, nil

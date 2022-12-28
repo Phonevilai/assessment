@@ -4,6 +4,7 @@ type Services interface {
 	Create(exp Req) (*Res, error)
 	FindById(id string) (*Res, error)
 	Update(id string, exp Req) (*Res, error)
+	GetAll() ([]*Res, error)
 }
 
 type MyService struct {
@@ -60,4 +61,22 @@ func (s *MyService) Update(id string, exp Req) (*Res, error) {
 		Note:   r.Note,
 		Tags:   r.Tags,
 	}, nil
+}
+
+func (s *MyService) GetAll() ([]*Res, error) {
+	result, err := s.FindAllExpenses()
+	if err != nil {
+		return nil, err
+	}
+	pRes := make([]*Res, 0)
+	for _, r := range result {
+		pRes = append(pRes, &Res{
+			ID:     r.ID,
+			Title:  r.Title,
+			Amount: r.Amount,
+			Note:   r.Note,
+			Tags:   r.Tags,
+		})
+	}
+	return pRes, nil
 }
