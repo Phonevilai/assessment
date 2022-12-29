@@ -11,5 +11,5 @@ container:
 test-ddos:
 	ddosify -t http://localhost:2565/healthz -p "2565" -m "GET" -d 2 -n 1000
 
-run-sandbox:
+sandbox:
 	docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from it_tests
