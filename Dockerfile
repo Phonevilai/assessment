@@ -10,13 +10,13 @@ COPY . .
 
 RUN CGO_ENABLED=0 go test -v
 
-RUN go build -o ./out/my-api .
+RUN go build -o ./out/myapi .
 
 #======================
 
 FROM alpine:3.17
 
-COPY --from=build-base /app/out/my-api /app/my-api
+COPY --from=build-base /app/out/myapi /app/myapi
 ENV TZ="Asia/Bangkok"
 
-CMD ["/app/my-api"]
+CMD ["/app/myapi"]

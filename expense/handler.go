@@ -1,18 +1,20 @@
 package expense
 
 import (
+	"github.com/Phonevilai/assessment/middleware"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-func SetupRouter(s *MyService) *gin.Engine {
+func NewMainHandler(s *MyService) *gin.Engine {
 
 	r := gin.Default()
-	r.GET("/healthz", healthCheck())
-	r.POST("/expenses", createExpense(s))
-	r.GET("/expenses/:id", getExpense(s))
-	r.PUT("/expenses/:id", updateExpense(s))
-	r.GET("/expenses", getAllExpenses(s))
+	protectLimit := r.Group("/", middleware.LimitedHandler())
+	protectLimit.GET("/healthz", healthCheck())
+	protectLimit.POST("/expenses", createExpense(s))
+	protectLimit.GET("/expenses/:id", getExpense(s))
+	protectLimit.PUT("/expenses/:id", updateExpense(s))
+	protectLimit.GET("/expenses", getAllExpenses(s))
 
 	return r
 }

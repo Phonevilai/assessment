@@ -32,18 +32,22 @@ func TestConnectToDB(t *testing.T) {
 			Note:   "night market promotion discount 10 bath",
 			Tags:   []string{"food", "beverage"},
 		}
-		got, _ := s.InsertExpense(e)
-		fmt.Println("id", got.ID)
-		assert.Equal(t, e.Title, got.Title)
+		got, err := s.InsertExpense(e)
+		if assert.NoError(t, err) {
+			assert.Equal(t, e.Title, got.Title)
+		}
 	})
 
 	t.Run("find expense bt id", func(t *testing.T) {
 		getEnv()
 		db := NewDB(os.Getenv("DATABASE_URL"))
 		s := NewStore(db)
-		result, _ := s.FindExpenseById("1")
-		fmt.Println("result:", result)
-		assert.Equal(t, 100, result.Amount)
+		got, err := s.FindExpenseById("1")
+
+		// Assertions
+		if assert.NoError(t, err) {
+			assert.Equal(t, "1", got.ID)
+		}
 	})
 
 	t.Run("update expense by id and returning", func(t *testing.T) {
@@ -57,9 +61,11 @@ func TestConnectToDB(t *testing.T) {
 			Note:   "1",
 			Tags:   []string{"123"},
 		}
-		result, err := s.UpdateExpenseById(e)
-		fmt.Println("result:", result)
-		assert.Equal(t, nil, err)
+
+		got, err := s.UpdateExpenseById(e)
+		if assert.NoError(t, err) {
+			assert.Equal(t, "1", got.ID)
+		}
 	})
 
 	t.Run("find all expenses", func(t *testing.T) {
@@ -67,7 +73,16 @@ func TestConnectToDB(t *testing.T) {
 		db := NewDB(os.Getenv("DATABASE_URL"))
 		s := NewStore(db)
 		r, err := s.FindAllExpenses()
-		fmt.Println("result:", len(r))
-		assert.Equal(t, nil, err)
+
+		if assert.NoError(t, err) {
+			if assert.NotEqual(t, 0, len(r)) {
+				assert.Condition(t, func() bool {
+					if len(r) <= 0 {
+						return false
+					}
+					return true
+				})
+			}
+		}
 	})
 }

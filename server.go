@@ -27,7 +27,8 @@ func main() {
 	mydb := expense.NewStore(db)
 	service := expense.NewService(mydb)
 
-	r := expense.SetupRouter(service)
+	r := expense.NewMainHandler(service)
+
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 

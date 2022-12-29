@@ -18,10 +18,10 @@ func TestCreateExpense(t *testing.T) {
 	getEnv()
 
 	// Arrange
+	r := gin.Default()
 	db := NewDB(os.Getenv("DATABASE_URL"))
 	mydb := NewStore(db)
 	service := NewService(mydb)
-	r := gin.Default()
 	r.POST("/expenses", createExpense(service))
 
 	// Act

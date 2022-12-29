@@ -8,6 +8,12 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile.test
+    ports:
+      - "2565:2565"
+    environment:
+      PORT: 2565
+      DATABASE_URL: postgres://tock:tockky@db:5432/assessment?sslmode=disable
+      GIN_MODE: debug
     volumes:
       - $PWD:/go/src/target
     depends_on:
@@ -16,9 +22,11 @@ services:
       - integration-test
   db:
     image: postgres:14.4
+    ports:
+      - "5432:5432"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: tock
+      POSTGRES_PASSWORD: tockky
       POSTGRES_DB: assessment
     restart: on-failure
     volumes:
