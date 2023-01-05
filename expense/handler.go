@@ -9,12 +9,13 @@ import (
 func NewMainHandler(s *MyService) *gin.Engine {
 
 	r := gin.Default()
-	protectLimit := r.Group("/", middleware.LimitedHandler())
-	protectLimit.GET("/healthz", healthCheck())
-	protectLimit.POST("/expenses", createExpense(s))
-	protectLimit.GET("/expenses/:id", getExpense(s))
-	protectLimit.PUT("/expenses/:id", updateExpense(s))
-	protectLimit.GET("/expenses", getAllExpenses(s))
+
+	protected := r.Group("/", middleware.LimitedHandler(), middleware.Auth())
+	protected.GET("/healthz", healthCheck())
+	protected.POST("/expenses", createExpense(s))
+	protected.GET("/expenses/:id", getExpense(s))
+	protected.PUT("/expenses/:id", updateExpense(s))
+	protected.GET("/expenses", getAllExpenses(s))
 
 	return r
 }

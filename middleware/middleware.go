@@ -17,3 +17,14 @@ func LimitedHandler() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func Auth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		auth := c.Request.Header.Get("Authorization")
+		if auth != "November 10, 2009" {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		c.Next()
+	}
+}
